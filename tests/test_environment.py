@@ -10,6 +10,7 @@ from sceptre.exceptions import CircularDependenciesError
 from sceptre.exceptions import StackDoesNotExistError
 from sceptre.exceptions import InvalidEnvironmentPathError
 
+import sceptre.environment
 from sceptre.environment import Environment
 from sceptre.stack_status import StackStatus
 
@@ -409,22 +410,22 @@ class TestEnvironment(object):
             sentinel.user_variables
         )
 
-    def test_get_available_stacks(self):
-        self.environment.path = os.path.join(
-            "account", "environment", "region"
-        )
-        self.environment.sceptre_dir = os.path.join(
-            os.getcwd(), "tests", "fixtures"
-        )
-        response = self.environment._get_available_stacks()
-        assert sorted(response) == sorted([
-            "account/environment/region/vpc",
-            "account/environment/region/subnets",
-            "account/environment/region/security_groups"
-        ])
+    # def test_get_available_stacks(self):
+    #     self.environment.path = os.path.join(
+    #         "account", "environment", "region"
+    #     )
+    #     self.environment.sceptre_dir = os.path.join(
+    #         os.getcwd(), "tests", "fixtures"
+    #     )
+    #     response = self.environment._get_available_stacks()
+    #     assert sorted(response) == sorted([
+    #         "account/environment/region/vpc",
+    #         "account/environment/region/subnets",
+    #         "account/environment/region/security_groups"
+    #     ])
 
     @patch("sceptre.environment.Stack")
-    @patch("sceptre.environment.Environment._get_available_stacks")
+    @patch("sceptre.environment._get_available_stacks")
     @patch("sceptre.environment.ConnectionManager")
     @patch("sceptre.environment.Environment._get_config")
     def test_load_stacks(
@@ -475,3 +476,20 @@ class TestEnvironment(object):
 
         response = self.environment._load_environments()
         assert response == {"env": sentinel.environment}
+
+
+def test_get_available_stacks():
+    environment_path = os.path.join(
+        "account", "environment", "region"
+    )
+    sceptre_dir = os.path.join(
+        os.path.dirname(__file__), "fixtures"
+    )
+    response = sceptre.environment._get_available_stacks(
+        sceptre_dir, environment_path
+    )
+    assert sorted(response) == sorted([
+        "account/environment/region/vpc",
+        "account/environment/region/subnets",
+        "account/environment/region/security_groups"
+    ])

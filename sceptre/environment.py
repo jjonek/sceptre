@@ -359,29 +359,29 @@ class Environment(object):
 
         return config
 
-    def _get_available_stacks(self):
-        """
-        Returns all the stacks contained in the environment.
-
-        :returns: A list of the environment's stacks.
-        :rtype: list
-        """
-        config_files = glob(os.path.join(
-            self.sceptre_dir, "config", self.path, "*.yaml"
-        ))
-        base_config_file_names = [
-            os.path.basename(config_file).split(".")[0]
-            for config_file in config_files
-        ]
-        stack_basenames = [
-            basename for basename in base_config_file_names
-            if basename != "config"
-        ]
-        available_stacks = [
-            "/".join([self.path, basename])
-            for basename in stack_basenames
-        ]
-        return available_stacks
+    # def _get_available_stacks(self):
+    #     """
+    #     Returns all the stacks contained in the environment.
+    #
+    #     :returns: A list of the environment's stacks.
+    #     :rtype: list
+    #     """
+    #     config_files = glob(os.path.join(
+    #         self.sceptre_dir, "config", self.path, "*.yaml"
+    #     ))
+    #     base_config_file_names = [
+    #         os.path.basename(config_file).split(".")[0]
+    #         for config_file in config_files
+    #     ]
+    #     stack_basenames = [
+    #         basename for basename in base_config_file_names
+    #         if basename != "config"
+    #     ]
+    #     available_stacks = [
+    #         "/".join([self.path, basename])
+    #         for basename in stack_basenames
+    #     ]
+    #     return available_stacks
 
     def _load_stacks(self):
         """
@@ -396,7 +396,7 @@ class Environment(object):
             iam_role=config.get("iam_role")
         )
         stacks = {}
-        for stack_name in self._get_available_stacks():
+        for stack_name in _get_available_stacks(self.sceptre_dir, self.path):
             self.logger.debug("Initialising stack '%s'", stack_name)
             stack = Stack(
                 name=stack_name,
@@ -446,3 +446,33 @@ class Environment(object):
             )
             environments[environment_name] = environment
         return environments
+
+
+def _get_available_stacks(sceptre_dir, environment_path):
+    """
+    Returns all the stacks contained in the environment.
+
+    :param sceptre_dir: The absolute path to the Sceptre directory.
+    :type sceptre_dir: str
+    :param environment_path: The name of the environment.
+    :type : str
+    :returns: A list of the environment's stacks.
+    :rtype: list
+    """
+    config_files = glob(os.path.join(
+        sceptre_dir, "config", environment_path, "*.yaml"
+    ))
+    base_config_file_names = [
+        os.path.basename(config_file).split(".")[0]
+        for config_file in config_files
+    ]
+    stack_basenames = [
+        basename for basename in base_config_file_names
+        if basename != "config"
+    ]
+    available_stacks = [
+        "/".join([environment_path, basename])
+        for basename in stack_basenames
+    ]
+    # import ipdb; ipdb.set_trace()
+    return available_stacks

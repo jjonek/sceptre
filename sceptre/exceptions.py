@@ -126,3 +126,9 @@ class StackDoesNotExistError(SceptreException):
     """
     Error raised when a stack does not exist.
     """
+
+
+class DuplicateStackNameError(SceptreException):
+    """
+    Error raised when two stacks share a name.
+    """
