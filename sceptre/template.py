@@ -14,6 +14,7 @@ import os
 import sys
 import threading
 
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 import botocore
 
 from .exceptions import UnsupportedTemplateFileTypeError
@@ -240,8 +241,15 @@ class Template(object):
 
         if self.file_extension in (".json", ".yaml"):
             self.logger.debug("%s - Opening file %s", self.name, self.path)
-            with open(self.path) as template_file:
-                body = template_file.read()
+            env = Environment(
+                loader=FileSystemLoader(os.path.dirname(self.path)),
+                undefined=StrictUndefined
+            )
+            template = env.get_template(os.path.basename(self.path))
+            body = template.render(
+                environment_variable=os.environ,
+                sceptre_user_data=self.sceptre_user_data
+            )
         elif self.file_extension == ".py":
             self.logger.debug(
                 "%s - Getting CloudFormation from %s", self.name, self.path
@@ -258,7 +266,7 @@ class Template(object):
             module = imp.load_source(self.name, self.path)
 
             if hasattr(module, "sceptre_handler"):
-                    body = module.sceptre_handler(self.sceptre_user_data)
+                body = module.sceptre_handler(self.sceptre_user_data)
             else:
                 raise TemplateSceptreHandlerError(
                     "The template does not have the required "
