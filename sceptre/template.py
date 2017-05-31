@@ -15,6 +15,7 @@ import sys
 import threading
 
 import botocore
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from .exceptions import UnsupportedTemplateFileTypeError
 from .exceptions import TemplateSceptreHandlerError
@@ -29,7 +30,8 @@ class Template(object):
     :param path: The absolute path to the file which stores the template.
     :type path: str
     :param sceptre_user_data: A dictionary of arbitrary data to be passed to \
-        a handler function in an external Python script.
+        a handler function in an external Python script or to Jinja2 when \
+        rendering JSON or YAML templates.
     :type sceptre_user_data: dict
     """
 
@@ -64,8 +66,14 @@ class Template(object):
 
             if file_extension in {".json", ".yaml"}:
                 self.logger.debug("%s - Opening file %s", self.name, self.path)
-                with open(self.path) as template_file:
-                    self._body = template_file.read()
+                env = Environment(
+                    loader=FileSystemLoader(os.path.dirname(self.path)),
+                    undefined=StrictUndefined
+                )
+                template = env.get_template(os.path.basename(self.path))
+                self._body = template.render(
+                    sceptre_user_data=self.sceptre_user_data
+                )
             elif file_extension == ".py":
                 self._body = self._call_sceptre_handler()
 
